@@ -1,32 +1,25 @@
 version: 2.1
+
+orbs:
+  browser-tools: circleci/browser-tools@1.5.3
+
 jobs:
   test-java:
     docker:
       - image: cimg/openjdk:17.0
     steps:
       - checkout
+
+      - browser-tools/install-chrome
+
       - run:
-          name: Run test1-Axone
-          command: |-
-            find . -name 'pom.xml' -o -name 'gradlew*' -o -name '*.gradle*' | \
-                    sort | xargs cat > /tmp/CIRCLECI_CACHE_KEY
-      - restore_cache:
-          key: cache-{{ checksum "/tmp/CIRCLECI_CACHE_KEY" }}
-      - run:
-          command: mvn verify
-      - store_test_results:
-          path: target/surefire-reports
-      - save_cache:
-          key: cache-{{ checksum "/tmp/CIRCLECI_CACHE_KEY" }}
-          paths:
-            - ~/.m2/repository
-  deploy:
-    docker:
-      - image: cimg/base:stable
-    steps:
-      - run:
-          name: deploy
-          command: '#e.g. ./deploy.sh'
+          name: Run tests
+          command: mvn clean test
+
+      - store_artifacts:
+         path: target/reports
+         destination: test-result
+
 workflows:
   build-and-test:
     jobs:
